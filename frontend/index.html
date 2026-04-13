@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Helpdesk</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+
+<h1 class="text-2xl font-bold mb-4">Helpdesk System</h1>
+
+<!-- Form -->
+<input id="title" class="border p-2 mb-2 block" placeholder="Title">
+<input id="desc" class="border p-2 mb-2 block" placeholder="Description">
+
+<button onclick="createTicket()" class="bg-blue-500 text-white p-2">
+ Create Ticket
+</button>
+
+<!-- Ticket List -->
+<div id="tickets" class="mt-5"></div>
+
+<script>
+
+async function createTicket(){
+
+const title = document.getElementById("title").value;
+const description = document.getElementById("desc").value;
+
+await fetch("http://localhost:5000/tickets",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({title,description})
+});
+
+getTickets();
+}
+async function createTicket(){
+
+const title = document.getElementById("title").value;
+const description = document.getElementById("desc").value;
+
+await fetch("http://localhost:5000/tickets",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({title,description})
+});
+
+getTickets();
+
+document.getElementById("title").value="";
+document.getElementById("desc").value="";
+
+}
+async function getTickets(){
+
+const res = await fetch("http://localhost:5000/tickets");
+const data = await res.json();
+
+let html="";
+if(data.length===0){
+html="<p>No tickets available</p>";
+}
+else{
+
+data.forEach(t=>{
+html+=`
+<div class="bg-white p-4 m-3 rounded shadow">
+<h3 class="font-bold text-lg">${t.title}</h3>
+<p class="mt-1">Status: 
+<span class="text-blue-600 font-semibold">${t.status}</span>
+</p>
+<select onchange="changeStatus(${t.id}, this.value)"
+class="border p-1 mt-2">
+<option ${t.status==="Open"?"selected":""}>Open</option>
+<option ${t.status==="In Progress"?"selected":""}>In Progress</option>
+<option ${t.status==="Closed"?"selected":""}>Closed</option>
+</select>
+<button onclick="updateStatus(${t.id})"
+class="bg-green-500 text-white px-2 py-1 mt-2 ml-2">
+Update Status
+</button>
+<button onclick="deleteTicket(${t.id})"
+class="bg-red-500 text-white px-2 py-1 mt-2">
+Delete
+</button>
+</div>`;
+});
+}
+
+document.getElementById("tickets").innerHTML=html;
+
+}
+
+// load tickets on start
+getTickets();
+
+async function deleteTicket(id){
+await fetch(`http://localhost:5000/tickets/${id}`,{
+method:"DELETE"
+});
+getTickets();
+}
+async function updateStatus(id){
+await fetch(`http://localhost:5000/tickets/${id}`,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+status:"In Progress"
+})
+});
+getTickets();
+}
+
+async function changeStatus(id, status){
+await fetch(`http://localhost:5000/tickets/${id}`,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({status})
+});
+getTickets();
+}
+
+</script>
+
+</body>
+</html>
+
