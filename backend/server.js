@@ -3,9 +3,8 @@ const app = express();
 const cors = require("cors");
 app.use(cors());
 app.use(express.json());
-app.use(express.json());
 let tickets = [];
-// Test route
+// Test
 app.get("/", (req, res) => {
  res.send("Server running");
 });
@@ -16,52 +15,54 @@ app.get("/tickets", (req, res) => {
 // POST create ticket
 app.post("/tickets", (req, res) => {
  const newTicket = {
-   id: tickets.length,   // ✅ IMPORTANT (id add ki)
+   id: tickets.length,
    title: req.body.title,
-   description: req.body.description,
-   status: "Open"
+   status: "Open",
+   comments: []   // 🔥 IMPORTANT LINE
  };
  tickets.push(newTicket);
- res.json({
-   message: "Ticket created",
-   data: newTicket
- });
+ console.log("Email sent for ticket");
+ res.json({ message: "Ticket created", data: newTicket });
 });
-// PUT update status
-app.put("/tickets/:id", (req, res) => {
+app.post("/tickets/:id/comment", (req, res) => {
  const id = parseInt(req.params.id);
- const ticket = tickets.find(t => t.id === id);
- if (ticket) {
-   ticket.status = req.body.status;
+ if (tickets[id] !== undefined) {
+   if (!tickets[id].comments) {
+     tickets[id].comments = [];
+   }
+   tickets[id].comments.push(req.body.comment);
    res.json({
-     message: "Status updated",
-     data: ticket
+     message: "Comment added",
+     data: tickets[id]
    });
  } else {
    res.send("Ticket not found");
  }
 });
-app.delete("/tickets/:id", (req, res) => {
-
-const id = parseInt(req.params.id);
-
-// ticket ka index find karo
-const index = tickets.findIndex(t => t.id === id);
-
-if (index !== -1) {
-
-tickets.splice(index, 1); // delete
-
-res.json({
-message: "Ticket deleted"
+// PUT update status
+app.put("/tickets/:id", (req, res) => {
+ const id = parseInt(req.params.id);
+ if (tickets[id] !== undefined) {
+   tickets[id].status = req.body.status;
+   res.json({
+     message: "Status updated",
+     data: tickets[id]
+   });
+ } else {
+   res.send("Ticket not found");
+ }
 });
-
-} else {
-
-res.send("Ticket not found");
-
-}
-
+// DELETE ticket
+app.delete("/tickets/:id", (req, res) => {
+ const id = parseInt(req.params.id);
+ if (tickets[id] !== undefined) {
+   tickets.splice(id, 1);
+   res.json({
+     message: "Ticket deleted"
+   });
+ } else {
+   res.send("Ticket not found");
+ }
 });
 // Start server
 app.listen(5000, () => {
