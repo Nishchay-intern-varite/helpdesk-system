@@ -17,12 +17,15 @@ app.post("/tickets", (req, res) => {
  const newTicket = {
    id: tickets.length,
    title: req.body.title,
+   description: req.body.description,
    status: "Open",
-   comments: []   // 🔥 IMPORTANT LINE
+   comments: []
  };
  tickets.push(newTicket);
- console.log("Email sent for ticket");
- res.json({ message: "Ticket created", data: newTicket });
+ res.json({
+   message: "Ticket created",
+   data: newTicket
+ });
 });
 app.post("/tickets/:id/comment", (req, res) => {
  const id = parseInt(req.params.id);
