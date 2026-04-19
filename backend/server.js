@@ -1,18 +1,14 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
+const app = express();
 app.use(cors());
 app.use(express.json());
 let tickets = [];
-// Test
-app.get("/", (req, res) => {
- res.send("Server running");
-});
-// GET all tickets
+// GET
 app.get("/tickets", (req, res) => {
  res.json(tickets);
 });
-// POST create ticket
+// CREATE
 app.post("/tickets", (req, res) => {
  const newTicket = {
    id: tickets.length,
@@ -22,52 +18,23 @@ app.post("/tickets", (req, res) => {
    comments: []
  };
  tickets.push(newTicket);
- res.json({
-   message: "Ticket created",
-   data: newTicket
- });
+ console.log("📧 Email sent to user (demo)");
+ res.json(newTicket);
 });
-app.post("/tickets/:id/comment", (req, res) => {
- const id = parseInt(req.params.id);
- if (tickets[id] !== undefined) {
-   if (!tickets[id].comments) {
-     tickets[id].comments = [];
-   }
-   tickets[id].comments.push(req.body.comment);
-   res.json({
-     message: "Comment added",
-     data: tickets[id]
-   });
- } else {
-   res.send("Ticket not found");
- }
-});
-// PUT update status
+// UPDATE (ADMIN)
 app.put("/tickets/:id", (req, res) => {
- const id = parseInt(req.params.id);
- if (tickets[id] !== undefined) {
-   tickets[id].status = req.body.status;
-   res.json({
-     message: "Status updated",
-     data: tickets[id]
-   });
- } else {
-   res.send("Ticket not found");
- }
+ tickets[req.params.id].status = req.body.status;
+ res.json(tickets);
 });
-// DELETE ticket
+// DELETE
 app.delete("/tickets/:id", (req, res) => {
- const id = parseInt(req.params.id);
- if (tickets[id] !== undefined) {
-   tickets.splice(id, 1);
-   res.json({
-     message: "Ticket deleted"
-   });
- } else {
-   res.send("Ticket not found");
- }
+ tickets.splice(req.params.id, 1);
+ res.json(tickets);
 });
-// Start server
-app.listen(5000, () => {
- console.log("Server started on port 5000");
+// COMMENT
+app.post("/tickets/:id/comment", (req, res) => {
+ tickets[req.params.id].comments.push(req.body.comment);
+ res.json(tickets);
 });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log("Server running"));
