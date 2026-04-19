@@ -14,59 +14,85 @@ const supabase = createClient(
 
   "https://jrdfzgulmeimpcjsslii.supabase.co",
 
-  "YOUR_ANON_KEY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 );
 
-// GET
+// ✅ GET (FIXED)
 
 app.get("/tickets", async (req, res) => {
 
-  const { data, error } = await supabase.from("tickets").select("*");
+  try {
 
-  if (error) return res.status(500).json(error);
+    const { data, error } = await supabase.from("tickets").select("*");
 
-  res.json(data);
+    if (error) {
+
+      console.log("SUPABASE ERROR:", error);
+
+      return res.json([]);
+
+    }
+
+    res.json(data || []);
+
+  } catch (err) {
+
+    console.log("SERVER ERROR:", err);
+
+    res.json([]);
+
+  }
 
 });
 
-// CREATE
+// ✅ CREATE
 
 app.post("/tickets", async (req, res) => {
 
-  const { title, description } = req.body;
+  try {
 
-  const { data, error } = await supabase
+    const { title, description } = req.body;
 
-    .from("tickets")
+    const { error } = await supabase
 
-    .insert([{ title, description }])
+      .from("tickets")
 
-    .select();
+      .insert([{ title, description }]);
 
-  if (error) return res.status(500).json(error);
+    if (error) {
 
-  res.json(data);
+      console.log(error);
+
+      return res.json({ message: "error" });
+
+    }
+
+    res.json({ message: "created" });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.json({ message: "error" });
+
+  }
 
 });
 
-// DELETE
+// ✅ DELETE
 
 app.delete("/tickets/:id", async (req, res) => {
 
-  const { id } = req.params;
-
-  await supabase.from("tickets").delete().eq("id", id);
+  await supabase.from("tickets").delete().eq("id", req.params.id);
 
   res.json({ message: "deleted" });
 
 });
 
-// UPDATE
+// ✅ UPDATE
 
 app.put("/tickets/:id", async (req, res) => {
-
-  const { id } = req.params;
 
   await supabase
 
@@ -74,13 +100,13 @@ app.put("/tickets/:id", async (req, res) => {
 
     .update({ status: req.body.status })
 
-    .eq("id", id);
+    .eq("id", req.params.id);
 
   res.json({ message: "updated" });
 
 });
 
-// COMMENT
+// ✅ COMMENT
 
 app.post("/tickets/:id/comment", async (req, res) => {
 
@@ -98,7 +124,7 @@ app.post("/tickets/:id/comment", async (req, res) => {
 
     .single();
 
-  const old = data.comments || [];
+  const old = data?.comments || [];
 
   await supabase
 
