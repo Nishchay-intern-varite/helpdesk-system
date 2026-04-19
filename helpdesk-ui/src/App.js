@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const API = "https://helpdesk-backend-doga.onrender.com";
 const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
- "YOUR_ANON_KEY"
+ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
 );
 function App() {
  const [tickets, setTickets] = useState([]);
@@ -13,12 +13,15 @@ function App() {
  const [user, setUser] = useState(null);
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
+ // GET
  const getTickets = async () => {
    const res = await fetch(`${API}/tickets`);
    const data = await res.json();
    setTickets(Array.isArray(data) ? data : []);
  };
+ // CREATE
  const createTicket = async () => {
+   console.log("USER:", user?.email);
    await fetch(`${API}/tickets`, {
      method: "POST",
      headers: {
@@ -27,13 +30,14 @@ function App() {
      body: JSON.stringify({
        title,
        description: desc,
-       email: user.email
+       email: user?.email
      })
    });
    getTickets();
    setTitle("");
    setDesc("");
  };
+ // LOGIN
  const login = async () => {
    const { data, error } = await supabase.auth.signInWithPassword({
      email,
@@ -45,6 +49,7 @@ function App() {
      setUser(data.user);
    }
  };
+ // SIGNUP
  const signup = async () => {
    const { error } = await supabase.auth.signUp({
      email,
@@ -52,6 +57,7 @@ function App() {
    });
    if (!error) alert("Signup success ✅");
  };
+ // LOGOUT
  const logout = async () => {
    await supabase.auth.signOut();
    setUser(null);
@@ -107,6 +113,7 @@ function App() {
 <CardContent>
 <Typography>{t.title} - {t.status}</Typography>
 <Typography>{t.description}</Typography>
+<Typography>User: {t.user_email}</Typography>
 </CardContent>
 </Card>
        ))}
