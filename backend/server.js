@@ -18,7 +18,7 @@ const supabase = createClient(
 
 );
 
-// ✅ GET (FIXED)
+// ✅ GET
 
 app.get("/tickets", async (req, res) => {
 
@@ -28,7 +28,7 @@ app.get("/tickets", async (req, res) => {
 
     if (error) {
 
-      console.log("SUPABASE ERROR:", error);
+      console.log(error);
 
       return res.json([]);
 
@@ -38,7 +38,7 @@ app.get("/tickets", async (req, res) => {
 
   } catch (err) {
 
-    console.log("SERVER ERROR:", err);
+    console.log(err);
 
     res.json([]);
 
@@ -46,7 +46,7 @@ app.get("/tickets", async (req, res) => {
 
 });
 
-// ✅ CREATE
+// ✅ CREATE (FIXED)
 
 app.post("/tickets", async (req, res) => {
 
@@ -54,27 +54,43 @@ app.post("/tickets", async (req, res) => {
 
     const { title, description } = req.body;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
 
       .from("tickets")
 
-      .insert([{ title, description }]);
+      .insert([
+
+        {
+
+          title: title,
+
+          description: description,
+
+          status: "Open",
+
+          comments: []
+
+        }
+
+      ])
+
+      .select();
 
     if (error) {
 
-      console.log(error);
+      console.log("INSERT ERROR:", error);
 
-      return res.json({ message: "error" });
+      return res.json([]);
 
     }
 
-    res.json({ message: "created" });
+    res.json(data);
 
   } catch (err) {
 
     console.log(err);
 
-    res.json({ message: "error" });
+    res.json([]);
 
   }
 
@@ -138,5 +154,5 @@ app.post("/tickets/:id/comment", async (req, res) => {
 
 });
 
-app.listen(5000, () => console.log("Server running"));
+app.listen(5000, () => console.log("Server running 🚀"));
  
