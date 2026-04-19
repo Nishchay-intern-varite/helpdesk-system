@@ -31,38 +31,11 @@ function App() {
      headers: {
        "Content-Type": "application/json"
      },
-     body: JSON.stringify({
-       title,
-       description: desc
-     })
+     body: JSON.stringify({ title, description: desc })
    });
    getTickets();
    setTitle("");
    setDesc("");
- };
- // ✅ DELETE
- const deleteTicket = async (id) => {
-   await fetch(`${API}/tickets/${id}`, { method: "DELETE" });
-   getTickets();
- };
- // ✅ UPDATE (ADMIN ONLY)
- const updateStatus = async (id) => {
-   await fetch(`${API}/tickets/${id}`, {
-     method: "PUT",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({ status: "Completed" })
-   });
-   getTickets();
- };
- // ✅ COMMENT
- const addComment = async (id) => {
-   const comment = prompt("Enter comment");
-   await fetch(`${API}/tickets/${id}/comment`, {
-     method: "POST",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({ comment })
-   });
-   getTickets();
  };
  // 🔐 LOGIN
  const login = async () => {
@@ -72,7 +45,6 @@ function App() {
    });
    if (error) {
      alert("Login failed ❌");
-     console.log(error);
    } else {
      setUser(data.user);
    }
@@ -87,7 +59,6 @@ function App() {
      alert("Signup success ✅");
    } else {
      alert("Signup failed ❌");
-     console.log(error);
    }
  };
  // 🔐 LOGOUT
@@ -100,37 +71,40 @@ function App() {
  }, []);
  return !user ? (
 <div style={{ textAlign: "center", marginTop: "100px" }}>
-<Typography variant="h4">Login</Typography>
+<Typography variant="h4">Login / Signup</Typography>
 <TextField
        label="Email"
        value={email}
        onChange={(e) => setEmail(e.target.value)}
-       style={{ marginTop: "20px" }}
+       style={{ marginTop: "20px", width: "250px" }}
      />
+<br />
 <TextField
        label="Password"
        type="password"
        value={password}
        onChange={(e) => setPassword(e.target.value)}
-       style={{ marginTop: "10px" }}
+       style={{ marginTop: "10px", width: "250px" }}
      />
 <br /><br />
-<Button variant="contained" onClick={login}>
+<Button
+       variant="contained"
+       onClick={login}
+       style={{ marginRight: "10px" }}
+>
        Login
 </Button>
-<br /><br />
-<Button variant="outlined" onClick={signup}>
+<Button
+       variant="outlined"
+       onClick={signup}
+>
        Signup
 </Button>
 </div>
  ) : (
 <div style={{ padding: "20px", background: "#f4f6f8", minHeight: "100vh" }}>
-<Typography variant="h4">
-       Helpdesk System 🚀
-</Typography>
-<Typography variant="body1">
-       Logged in as: {user.email}
-</Typography>
+<Typography variant="h4">Helpdesk System 🚀</Typography>
+<Typography>Logged in as: {user.email}</Typography>
 <Button onClick={logout}>Logout</Button>
 <br /><br />
      {/* CREATE */}
@@ -169,32 +143,6 @@ function App() {
 <Typography variant="body2">
              Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : ""}
 </Typography>
-<br />
-           {/* ADMIN */}
-           {user.email === "admin@gmail.com" && (
-<Button
-               variant="contained"
-               color="success"
-               onClick={() => updateStatus(t.id)}
-               style={{ marginRight: "10px" }}
->
-               Update
-</Button>
-           )}
-<Button
-             variant="outlined"
-             color="error"
-             onClick={() => deleteTicket(t.id)}
-             style={{ marginRight: "10px" }}
->
-             Delete
-</Button>
-<Button
-             variant="outlined"
-             onClick={() => addComment(t.id)}
->
-             Comment
-</Button>
 </CardContent>
 </Card>
      ))}
