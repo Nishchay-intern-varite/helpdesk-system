@@ -1,141 +1,141 @@
 import { useState, useEffect } from "react";
-function App() {
-const [tickets, setTickets] = useState([]);
-const [title, setTitle] = useState("");
-const [desc, setDesc] = useState("");
-const [search, setSearch] = useState("");
-const [filter, setFilter] = useState("All");
-const [user, setUser] = useState(null);
-const [username, setUsername] = useState("");
-// 🔥 BACKEND URL
+import { Button, TextField, Card, CardContent, Typography } from "@mui/material";
 const API = "https://helpdesk-backend-doga.onrender.com";
-// LOGIN
-const login = () => {
-if(username){
-setUser(username);
-}
-};
-// LOGOUT
-const logout = () => {
-setUser(null);
-};
-// GET
-const getTickets = () => {
-fetch(`${API}/tickets`)
-.then(res => res.json())
-.then(data => setTickets(data));
-};
-// CREATE
-const createTicket = () => {
-fetch(`${API}/tickets`, {
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({ title, description: desc })
-})
-.then(()=> {
-getTickets();
-setTitle("");
-setDesc("");
-});
-};
-// DELETE
-const deleteTicket = (id) => {
-fetch(`${API}/tickets/${id}`,{
-method:"DELETE"
-})
-.then(()=> getTickets());
-};
-// UPDATE
-const updateStatus = (id) => {
-fetch(`${API}/tickets/${id}`,{
-method:"PUT",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({ status:"Completed" })
-})
-.then(()=> getTickets());
-};
-// COMMENT
-const addComment = (id) => {
-const comment = prompt("Enter comment");
-fetch(`${API}/tickets/${id}/comment`,{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({ comment })
-})
-.then(()=> getTickets());
-};
-useEffect(() => {
-getTickets();
-}, []);
-return (
-!user ? (
-<div style={{textAlign:"center", marginTop:"50px"}}>
-<h2>Login</h2>
-<input
-placeholder="Enter name (try admin)"
-value={username}
-onChange={(e)=>setUsername(e.target.value)}
-style={{padding:"10px"}}
-/>
-<br/><br/>
-<button onClick={login}>Login</button>
+function App() {
+ const [tickets, setTickets] = useState([]);
+ const [title, setTitle] = useState("");
+ const [desc, setDesc] = useState("");
+ const [user, setUser] = useState(null);
+ const [username, setUsername] = useState("");
+ const getTickets = async () => {
+   const res = await fetch(`${API}/tickets`);
+   const data = await res.json();
+   setTickets(data);
+ };
+ const createTicket = async () => {
+   await fetch(`${API}/tickets`, {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json"
+     },
+     body: JSON.stringify({ title, description: desc })
+   });
+   getTickets();
+   setTitle("");
+   setDesc("");
+ };
+ const deleteTicket = async (id) => {
+   await fetch(`${API}/tickets/${id}`, { method: "DELETE" });
+   getTickets();
+ };
+ const updateStatus = async (id) => {
+   await fetch(`${API}/tickets/${id}`, {
+     method: "PUT",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ status: "Completed" })
+   });
+   getTickets();
+ };
+ const addComment = async (id) => {
+   const comment = prompt("Enter comment");
+   await fetch(`${API}/tickets/${id}/comment`, {
+     method: "POST",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ comment })
+   });
+   getTickets();
+ };
+ useEffect(() => {
+   getTickets();
+ }, []);
+ return !user ? (
+<div style={{ textAlign: "center", marginTop: "100px" }}>
+<Typography variant="h4">Login</Typography>
+<TextField
+       label="Enter name"
+       value={username}
+       onChange={(e) => setUsername(e.target.value)}
+       style={{ marginTop: "20px" }}
+     />
+<br /><br />
+<Button variant="contained" onClick={() => setUser(username)}>
+       Login
+</Button>
 </div>
-) : (
-<div style={{
-padding:"20px",
-background:"#f5f6fa",
-minHeight:"100vh"
-}}>
-<h1>Helpdesk System 🚀</h1>
-<button onClick={logout}>Logout</button>
-{/* SEARCH */}
-<input
-placeholder="Search..."
-value={search}
-onChange={(e)=>setSearch(e.target.value)}
-/>
-{/* FILTER */}
-<button onClick={()=>setFilter("All")}>All</button>
-<button onClick={()=>setFilter("Open")}>Open</button>
-<button onClick={()=>setFilter("Completed")}>Completed</button>
-{/* CREATE */}
-<h3>Create Ticket</h3>
-<input
-value={title}
-onChange={(e)=>setTitle(e.target.value)}
-placeholder="Title"
-/>
-<input
-value={desc}
-onChange={(e)=>setDesc(e.target.value)}
-placeholder="Description"
-/>
-<button onClick={createTicket}>Create</button>
-{/* LIST */}
-{tickets
-.filter(t => filter === "All" || t.status === filter)
-.filter(t => t.title?.toLowerCase().includes(search.toLowerCase()))
-.map((t)=>(
-<div key={t.id} style={{
-background:"white",
-padding:"10px",
-margin:"10px 0"
-}}>
-<b>{t.title}</b> - {t.status}
-<br/>
-{t.description}
-<br/>
-Comments: {(t.comments || []).join(", ")}
-<br/>
-{user === "admin" && (
-<button onClick={()=>updateStatus(t.id)}>Update</button>
-)}
-<button onClick={()=>deleteTicket(t.id)}>Delete</button>
-<button onClick={()=>addComment(t.id)}>Comment</button>
+ ) : (
+<div style={{ padding: "20px", background: "#f4f6f8", minHeight: "100vh" }}>
+<Typography variant="h4" gutterBottom>
+       Helpdesk System 🚀
+</Typography>
+<Button variant="outlined" onClick={() => setUser(null)}>
+       Logout
+</Button>
+<br /><br />
+     {/* CREATE FORM */}
+<Card style={{ padding: "20px", marginBottom: "20px" }}>
+<Typography variant="h6">Create Ticket</Typography>
+<TextField
+         label="Title"
+         fullWidth
+         value={title}
+         onChange={(e) => setTitle(e.target.value)}
+         style={{ marginTop: "10px" }}
+       />
+<TextField
+         label="Description"
+         fullWidth
+         value={desc}
+         onChange={(e) => setDesc(e.target.value)}
+         style={{ marginTop: "10px" }}
+       />
+<Button
+         variant="contained"
+         style={{ marginTop: "15px" }}
+         onClick={createTicket}
+>
+         Create
+</Button>
+</Card>
+     {/* TICKETS */}
+     {tickets.map((t) => (
+<Card key={t.id} style={{ marginBottom: "15px" }}>
+<CardContent>
+<Typography variant="h6">
+             {t.title} - {t.status}
+</Typography>
+<Typography>{t.description}</Typography>
+<Typography variant="body2" color="gray">
+             Comments: {(t.comments || []).join(", ")}
+</Typography>
+<br />
+           {user === "admin" && (
+<Button
+               variant="contained"
+               color="success"
+               onClick={() => updateStatus(t.id)}
+               style={{ marginRight: "10px" }}
+>
+               Update
+</Button>
+           )}
+<Button
+             variant="outlined"
+             color="error"
+             onClick={() => deleteTicket(t.id)}
+             style={{ marginRight: "10px" }}
+>
+             Delete
+</Button>
+<Button
+             variant="outlined"
+             onClick={() => addComment(t.id)}
+>
+             Comment
+</Button>
+</CardContent>
+</Card>
+     ))}
 </div>
-))}
-</div>
-)
-);
+ );
 }
 export default App;
