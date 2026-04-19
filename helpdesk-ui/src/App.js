@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { Button, TextField, Card, CardContent, Typography } from "@mui/material";
 import { createClient } from "@supabase/supabase-js";
 const API = "https://helpdesk-backend-doga.onrender.com";
-// 🔥 SUPABASE
 const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
+ "YOUR_ANON_KEY"
 );
 function App() {
  const [tickets, setTickets] = useState([]);
@@ -14,30 +13,27 @@ function App() {
  const [user, setUser] = useState(null);
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
- // ✅ GET TICKETS
  const getTickets = async () => {
-   try {
-     const res = await fetch(`${API}/tickets`);
-     const data = await res.json();
-     setTickets(Array.isArray(data) ? data : []);
-   } catch {
-     setTickets([]);
-   }
+   const res = await fetch(`${API}/tickets`);
+   const data = await res.json();
+   setTickets(Array.isArray(data) ? data : []);
  };
- // ✅ CREATE
  const createTicket = async () => {
    await fetch(`${API}/tickets`, {
      method: "POST",
      headers: {
        "Content-Type": "application/json"
      },
-     body: JSON.stringify({ title, description: desc })
+     body: JSON.stringify({
+       title,
+       description: desc,
+       email: user.email
+     })
    });
    getTickets();
    setTitle("");
    setDesc("");
  };
- // 🔐 LOGIN
  const login = async () => {
    const { data, error } = await supabase.auth.signInWithPassword({
      email,
@@ -49,19 +45,13 @@ function App() {
      setUser(data.user);
    }
  };
- // 🔐 SIGNUP
  const signup = async () => {
    const { error } = await supabase.auth.signUp({
      email,
      password
    });
-   if (!error) {
-     alert("Signup success ✅");
-   } else {
-     alert("Signup failed ❌");
-   }
+   if (!error) alert("Signup success ✅");
  };
- // 🔐 LOGOUT
  const logout = async () => {
    await supabase.auth.signOut();
    setUser(null);
@@ -76,76 +66,50 @@ function App() {
        label="Email"
        value={email}
        onChange={(e) => setEmail(e.target.value)}
-       style={{ marginTop: "20px", width: "250px" }}
      />
-<br />
 <TextField
        label="Password"
        type="password"
        value={password}
        onChange={(e) => setPassword(e.target.value)}
-       style={{ marginTop: "10px", width: "250px" }}
+       style={{ marginTop: "10px" }}
      />
 <br /><br />
-<Button
-       variant="contained"
-       onClick={login}
-       style={{ marginRight: "10px" }}
->
-       Login
-</Button>
-<Button
-       variant="outlined"
-       onClick={signup}
->
+<Button onClick={login}>Login</Button>
+<Button onClick={signup} style={{ marginLeft: "10px" }}>
        Signup
 </Button>
 </div>
  ) : (
-<div style={{ padding: "20px", background: "#f4f6f8", minHeight: "100vh" }}>
-<Typography variant="h4">Helpdesk System 🚀</Typography>
+<div style={{ padding: "20px" }}>
+<Typography variant="h4">Helpdesk 🚀</Typography>
 <Typography>Logged in as: {user.email}</Typography>
 <Button onClick={logout}>Logout</Button>
 <br /><br />
-     {/* CREATE */}
-<Card style={{ padding: "20px", marginBottom: "20px" }}>
-<Typography variant="h6">Create Ticket</Typography>
 <TextField
-         label="Title"
-         fullWidth
-         value={title}
-         onChange={(e) => setTitle(e.target.value)}
-         style={{ marginTop: "10px" }}
-       />
+       label="Title"
+       value={title}
+       onChange={(e) => setTitle(e.target.value)}
+     />
 <TextField
-         label="Description"
-         fullWidth
-         value={desc}
-         onChange={(e) => setDesc(e.target.value)}
-         style={{ marginTop: "10px" }}
-       />
-<Button
-         variant="contained"
-         style={{ marginTop: "15px" }}
-         onClick={createTicket}
->
-         Create
-</Button>
-</Card>
-     {/* LIST */}
-     {Array.isArray(tickets) && tickets.map((t) => (
-<Card key={t.id} style={{ marginBottom: "15px" }}>
+       label="Description"
+       value={desc}
+       onChange={(e) => setDesc(e.target.value)}
+     />
+<Button onClick={createTicket}>Create</Button>
+     {tickets
+       .filter((t) => {
+         if (user.email === "admin@gmail.com") return true;
+         return t.user_email === user.email;
+       })
+       .map((t) => (
+<Card key={t.id} style={{ margin: "10px" }}>
 <CardContent>
-<Typography variant="h6">
-             {t.title} - {t.status}
-</Typography>
+<Typography>{t.title} - {t.status}</Typography>
 <Typography>{t.description}</Typography>
-<Typography variant="body2">
-             Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : ""}
-</Typography>
 </CardContent>
 </Card>
-     ))}
+       ))}
 </div>
  );
 }
