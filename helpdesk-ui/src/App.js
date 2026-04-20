@@ -22,11 +22,26 @@ function App() {
  const [user, setUser] = useState(null);
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
+ // 🔥 FIX: AUTH STATE LISTENER
+ useEffect(() => {
+   supabase.auth.getSession().then(({ data }) => {
+     setUser(data.session?.user || null);
+   });
+   const { data: listener } = supabase.auth.onAuthStateChange(
+     (_event, session) => {
+       setUser(session?.user || null);
+     }
+   );
+   return () => listener.subscription.unsubscribe();
+ }, []);
  const getTickets = async () => {
    const res = await fetch(`${API}/tickets`);
    const data = await res.json();
    setTickets(Array.isArray(data) ? data : []);
  };
+ useEffect(() => {
+   getTickets();
+ }, []);
  const createTicket = async () => {
    if (!title || !desc) {
      alert("Fill all fields");
@@ -35,9 +50,7 @@ function App() {
    setLoading(true);
    await fetch(`${API}/tickets`, {
      method: "POST",
-     headers: {
-       "Content-Type": "application/json"
-     },
+     headers: { "Content-Type": "application/json" },
      body: JSON.stringify({
        title,
        description: desc,
@@ -50,15 +63,11 @@ function App() {
    getTickets();
  };
  const updateStatus = async (id) => {
-   await fetch(`${API}/tickets/${id}`, {
-     method: "PUT"
-   });
+   await fetch(`${API}/tickets/${id}`, { method: "PUT" });
    getTickets();
  };
  const deleteTicket = async (id) => {
-   await fetch(`${API}/tickets/${id}`, {
-     method: "DELETE"
-   });
+   await fetch(`${API}/tickets/${id}`, { method: "DELETE" });
    getTickets();
  };
  const addComment = async (id) => {
@@ -72,28 +81,24 @@ function App() {
    getTickets();
  };
  const login = async () => {
-   const { data, error } = await supabase.auth.signInWithPassword({
+   const { error } = await supabase.auth.signInWithPassword({
      email,
      password
    });
-   if (error) alert("Login failed ❌");
-   else setUser(data.user);
+   if (error) alert(error.message);
  };
  const signup = async () => {
    const { error } = await supabase.auth.signUp({
      email,
      password
    });
-   if (!error) alert("Signup success ✅");
+   if (!error) alert("Signup success");
  };
  const logout = async () => {
    await supabase.auth.signOut();
-   setUser(null);
  };
- useEffect(() => {
-   getTickets();
- }, []);
- return !user ? (
+ if (!user) {
+   return (
 <div style={{ textAlign: "center", marginTop: "100px" }}>
 <Typography variant="h4">Login / Signup</Typography>
 <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -102,25 +107,23 @@ function App() {
 <Button onClick={login}>Login</Button>
 <Button onClick={signup}>Signup</Button>
 </div>
- ) : (
+   );
+ }
+ return (
 <div style={{ padding: "20px" }}>
 <Typography variant="h4">
        {user.email === "admin@gmail.com" ? "Admin Dashboard 👑" : "User Dashboard 👤"}
 </Typography>
 <Typography>{user.email}</Typography>
-<Typography>Total Tickets: {tickets.length}</Typography>
 <Button onClick={logout}>Logout</Button>
 <br /><br />
-     {/* CREATE */}
 <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
 <TextField label="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
 <Button disabled={loading} onClick={createTicket}>
        {loading ? "Creating..." : "Create"}
 </Button>
 <br /><br />
-     {/* SEARCH */}
 <TextField label="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
-     {/* FILTER */}
 <select onChange={(e) => setFilter(e.target.value)}>
 <option>All</option>
 <option>Open</option>
@@ -143,10 +146,7 @@ function App() {
 </Typography>
 <Typography>User: {t.user_email}</Typography>
 <Typography>
-               Created: {t.created_at ? new Date(t.created_at).toLocaleString() : ""}
-</Typography>
-<Typography>
-               Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
+               {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
 </Typography>
              {user.email === "admin@gmail.com" && (
 <Button onClick={() => updateStatus(t.id)}>Update</Button>
