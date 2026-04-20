@@ -11,13 +11,10 @@ const supabase = createClient(
 // GET
 app.get("/tickets", async (req, res) => {
  const { data, error } = await supabase.from("tickets").select("*");
- if (error) {
-   console.log(error);
-   return res.status(500).json(error);
- }
+ if (error) return res.status(500).json(error);
  res.json(data || []);
 });
-// CREATE (🔥 FIXED)
+// CREATE
 app.post("/tickets", async (req, res) => {
  const { title, description, email } = req.body;
  const { data, error } = await supabase
@@ -32,10 +29,7 @@ app.post("/tickets", async (req, res) => {
      }
    ])
    .select();
- if (error) {
-   console.log("ERROR:", error);
-   return res.status(500).json(error);
- }
+ if (error) return res.status(500).json(error);
  res.json(data);
 });
 // UPDATE
