@@ -8,15 +8,15 @@ const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
 );
-// GET
+// GET ALL
 app.get("/tickets", async (req, res) => {
- const { data, error } = await supabase.from("tickets").select("*");
+ const { data, error } = await supabase.from("tickets").select("*").order("id", { ascending: false });
  if (error) return res.status(500).json(error);
  res.json(data || []);
 });
 // CREATE
 app.post("/tickets", async (req, res) => {
- const { title, description, email } = req.body;
+ const { title, description, email, category, priority } = req.body;
  const { data, error } = await supabase
    .from("tickets")
    .insert([
@@ -24,18 +24,24 @@ app.post("/tickets", async (req, res) => {
        title,
        description,
        status: "Open",
-       user_email: email || "demo@gmail.com",
-       comments: []
+       category: category || "General",
+       priority: priority || "Medium",
+       created_by_name: email,
+       user_email: email,
+       comments: [],
+       created_at: new Date()
      }
    ])
    .select();
  if (error) return res.status(500).json(error);
  res.json(data);
 });
-// UPDATE
+// UPDATE STATUS
 app.put("/tickets/:id", async (req, res) => {
- await supabase.from("tickets")
-   .update({ status: "Completed" })
+ const { status } = req.body;
+ await supabase
+   .from("tickets")
+   .update({ status })
    .eq("id", req.params.id);
  res.json({ message: "updated" });
 });
