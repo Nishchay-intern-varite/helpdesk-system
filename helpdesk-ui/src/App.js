@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Button, TextField, Card, CardContent, Typography } from "@mui/material";
+import {
+ Button,
+ TextField,
+ Card,
+ CardContent,
+ Typography
+} from "@mui/material";
 import { createClient } from "@supabase/supabase-js";
 const API = "https://helpdesk-backend-doga.onrender.com";
 const supabase = createClient(
@@ -8,8 +14,11 @@ const supabase = createClient(
 );
 function App() {
  const [tickets, setTickets] = useState([]);
+ const [page, setPage] = useState("tickets");
  const [title, setTitle] = useState("");
  const [desc, setDesc] = useState("");
+ const [category, setCategory] = useState("General");
+ const [priority, setPriority] = useState("Medium");
  const [search, setSearch] = useState("");
  const [filter, setFilter] = useState("All");
  const [user, setUser] = useState(null);
@@ -27,7 +36,7 @@ function App() {
  const getTickets = async () => {
    const res = await fetch(`${API}/tickets`);
    const data = await res.json();
-   setTickets(Array.isArray(data) ? data : []);
+   setTickets(data || []);
  };
  useEffect(() => {
    getTickets();
@@ -42,15 +51,22 @@ function App() {
      body: JSON.stringify({
        title,
        description: desc,
-       email: user?.email || "demo@gmail.com"
+       email: user?.email,
+       category,
+       priority
      })
    });
    setTitle("");
    setDesc("");
    getTickets();
+   setPage("tickets");
  };
- const updateStatus = async (id) => {
-   await fetch(`${API}/tickets/${id}`, { method: "PUT" });
+ const updateStatus = async (id, status) => {
+   await fetch(`${API}/tickets/${id}`, {
+     method: "PUT",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ status })
+   });
    getTickets();
  };
  const deleteTicket = async (id) => {
@@ -86,61 +102,109 @@ function App() {
  };
  if (!user) {
    return (
-<div style={{ textAlign: "center", marginTop: "100px" }}>
-<Typography variant="h4">Login / Signup</Typography>
-<TextField label="Email" onChange={(e) => setEmail(e.target.value)} />
-<TextField type="password" label="Password" onChange={(e) => setPassword(e.target.value)} />
+<div style={{ textAlign: "center", marginTop: 100 }}>
+<Typography variant="h4">HelpDesk Login</Typography>
+<TextField label="Email" onChange={(e)=>setEmail(e.target.value)} />
+<TextField type="password" label="Password" onChange={(e)=>setPassword(e.target.value)} />
 <br /><br />
 <Button onClick={login}>Login</Button>
 <Button onClick={signup}>Signup</Button>
 </div>
    );
  }
+ const open = tickets.filter(t => t.status === "Open").length;
+ const progress = tickets.filter(t => t.status === "In Progress").length;
+ const closed = tickets.filter(t => t.status === "Closed").length;
  return (
-<div style={{ padding: "20px" }}>
-<Typography variant="h4">
-       {user.email === "admin@gmail.com" ? "Admin Dashboard 👑" : "User Dashboard 👤"}
-</Typography>
-<Typography>{user.email}</Typography>
-<Button onClick={logout}>Logout</Button>
+<div style={{ padding: 20 }}>
+     {/* NAVBAR */}
+<div style={{
+       display: "flex",
+       justifyContent: "space-between",
+       padding: 15,
+       background: "#111",
+       color: "white",
+       borderRadius: 10
+     }}>
+<b>HelpDesk 🚀</b>
+<div style={{ display: "flex", gap: 10 }}>
+<Button variant="contained" onClick={()=>setPage("tickets")}>My Tickets</Button>
+<Button variant="contained" onClick={()=>setPage("new")}>New Ticket</Button>
+         {user.email === "admin@gmail.com" && (
+<Button color="warning" variant="contained" onClick={()=>setPage("admin")}>
+             Admin Panel
+</Button>
+         )}
+<Button color="error" variant="contained" onClick={logout}>Logout</Button>
+</div>
+</div>
+     {/* NEW TICKET */}
+     {page === "new" && (
+<Card style={{ marginTop: 20, padding: 20 }}>
+<Typography variant="h5">Create Ticket</Typography>
+<br />
+<TextField fullWidth label="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
 <br /><br />
-<TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-<TextField label="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
-<Button onClick={createTicket}>Create</Button>
+<TextField fullWidth label="Description" value={desc} onChange={(e)=>setDesc(e.target.value)} />
 <br /><br />
-<TextField label="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
-<select onChange={(e) => setFilter(e.target.value)}>
+<TextField fullWidth label="Category" value={category} onChange={(e)=>setCategory(e.target.value)} />
+<br /><br />
+<TextField fullWidth label="Priority" value={priority} onChange={(e)=>setPriority(e.target.value)} />
+<br /><br />
+<Button variant="contained" onClick={createTicket}>Submit Ticket 🚀</Button>
+</Card>
+     )}
+     {/* MY TICKETS */}
+     {page === "tickets" && (
+<>
+<br />
+<TextField label="Search" onChange={(e)=>setSearch(e.target.value)} />
+<select onChange={(e)=>setFilter(e.target.value)}>
 <option>All</option>
 <option>Open</option>
-<option>Completed</option>
+<option>In Progress</option>
+<option>Closed</option>
 </select>
-     {tickets.length === 0 && <p>No tickets found</p>}
-     {tickets
-       .filter((t) => {
-         if (user.email !== "admin@gmail.com" && t.user_email !== user.email) return false;
-         if (filter !== "All" && t.status !== filter) return false;
-         return t.title.toLowerCase().includes(search.toLowerCase());
-       })
-       .map((t) => (
-<Card key={t.id} style={{ margin: "10px" }}>
+         {tickets
+           .filter(t =>
+             t.title.toLowerCase().includes(search.toLowerCase()) &&
+             (filter === "All" || t.status === filter)
+           )
+           .map(t => (
+<Card key={t.id} style={{ marginTop: 15, borderRadius: 12 }}>
 <CardContent>
 <Typography variant="h6">{t.title}</Typography>
 <Typography>{t.description}</Typography>
-<Typography style={{ color: t.status === "Open" ? "red" : "green" }}>
-               {t.status}
-</Typography>
-<Typography>User: {t.user_email}</Typography>
+<Typography>Status: {t.status}</Typography>
+<Typography>Category: {t.category}</Typography>
+<Typography>Priority: {t.priority}</Typography>
 <Typography>
-               Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
+                   Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : ""}
 </Typography>
-             {user.email === "admin@gmail.com" && (
-<Button onClick={() => updateStatus(t.id)}>Update</Button>
-             )}
-<Button onClick={() => deleteTicket(t.id)}>Delete</Button>
-<Button onClick={() => addComment(t.id)}>Comment</Button>
+                 {user.email === "admin@gmail.com" && (
+<>
+<Button onClick={()=>updateStatus(t.id,"In Progress")}>Progress</Button>
+<Button onClick={()=>updateStatus(t.id,"Closed")}>Close</Button>
+</>
+                 )}
+<Button color="error" onClick={()=>deleteTicket(t.id)}>Delete</Button>
+<Button onClick={()=>addComment(t.id)}>Comment</Button>
 </CardContent>
 </Card>
-       ))}
+           ))}
+</>
+     )}
+     {/* ADMIN PANEL */}
+     {page === "admin" && (
+<div style={{ marginTop: 20 }}>
+<Typography variant="h5">Admin Dashboard 👑</Typography>
+<br />
+<Card style={{ padding: 15 }}>Open: {open}</Card>
+<Card style={{ padding: 15 }}>In Progress: {progress}</Card>
+<Card style={{ padding: 15 }}>Closed: {closed}</Card>
+<Card style={{ padding: 15 }}>Total: {tickets.length}</Card>
+</div>
+     )}
 </div>
  );
 }
