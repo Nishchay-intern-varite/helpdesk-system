@@ -34,8 +34,7 @@ app.post("/tickets", async (req, res) => {
 });
 // UPDATE
 app.put("/tickets/:id", async (req, res) => {
- await supabase
-   .from("tickets")
+ await supabase.from("tickets")
    .update({ status: "Completed" })
    .eq("id", req.params.id);
  res.json({ message: "updated" });
