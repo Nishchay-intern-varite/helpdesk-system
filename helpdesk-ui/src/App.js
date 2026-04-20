@@ -13,31 +13,47 @@ function App() {
  const [user, setUser] = useState(null);
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
- // GET
+ // ✅ GET
  const getTickets = async () => {
-   const res = await fetch(`${API}/tickets`);
-   const data = await res.json();
-   setTickets(Array.isArray(data) ? data : []);
+   try {
+     const res = await fetch(`${API}/tickets`);
+     const data = await res.json();
+     setTickets(Array.isArray(data) ? data : []);
+   } catch (err) {
+     console.log(err);
+     setTickets([]);
+   }
  };
- // CREATE
+ // ✅ CREATE (FIXED)
  const createTicket = async () => {
-   console.log("USER:", user?.email);
-   await fetch(`${API}/tickets`, {
-     method: "POST",
-     headers: {
-       "Content-Type": "application/json"
-     },
-     body: JSON.stringify({
-       title,
-       description: desc,
-       email: user?.email
-     })
+   alert("Button Clicked ✅");
+   console.log("SENDING:", {
+     title,
+     description: desc,
+     email: user?.email
    });
-   getTickets();
-   setTitle("");
-   setDesc("");
+   try {
+     const res = await fetch(`${API}/tickets`, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json"
+       },
+       body: JSON.stringify({
+         title,
+         description: desc,
+         email: user?.email
+       })
+     });
+     const data = await res.json();
+     console.log("RESPONSE:", data);
+     getTickets();
+     setTitle("");
+     setDesc("");
+   } catch (err) {
+     console.log("ERROR:", err);
+   }
  };
- // LOGIN
+ // ✅ LOGIN
  const login = async () => {
    const { data, error } = await supabase.auth.signInWithPassword({
      email,
@@ -49,7 +65,7 @@ function App() {
      setUser(data.user);
    }
  };
- // SIGNUP
+ // ✅ SIGNUP
  const signup = async () => {
    const { error } = await supabase.auth.signUp({
      email,
@@ -57,7 +73,7 @@ function App() {
    });
    if (!error) alert("Signup success ✅");
  };
- // LOGOUT
+ // ✅ LOGOUT
  const logout = async () => {
    await supabase.auth.signOut();
    setUser(null);
@@ -81,8 +97,10 @@ function App() {
        style={{ marginTop: "10px" }}
      />
 <br /><br />
-<Button onClick={login}>Login</Button>
-<Button onClick={signup} style={{ marginLeft: "10px" }}>
+<Button variant="contained" onClick={login}>
+       Login
+</Button>
+<Button variant="outlined" onClick={signup} style={{ marginLeft: "10px" }}>
        Signup
 </Button>
 </div>
@@ -102,7 +120,9 @@ function App() {
        value={desc}
        onChange={(e) => setDesc(e.target.value)}
      />
-<Button onClick={createTicket}>Create</Button>
+<Button variant="contained" onClick={createTicket}>
+       Create
+</Button>
      {tickets
        .filter((t) => {
          if (user.email === "admin@gmail.com") return true;
