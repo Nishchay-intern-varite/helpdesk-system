@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const API = "https://helpdesk-backend-doga.onrender.com";
 const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
- "PASTE_YOUR_ANON_KEY_HERE"
+ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
 );
 function App() {
  const [tickets, setTickets] = useState([]);
@@ -20,9 +20,7 @@ function App() {
      setUser(data.session?.user || null);
    });
    const { data: listener } = supabase.auth.onAuthStateChange(
-     (_event, session) => {
-       setUser(session?.user || null);
-     }
+     (_event, session) => setUser(session?.user || null)
    );
    return () => listener.subscription.unsubscribe();
  }, []);
@@ -116,6 +114,7 @@ function App() {
 <option>Open</option>
 <option>Completed</option>
 </select>
+     {tickets.length === 0 && <p>No tickets found</p>}
      {tickets
        .filter((t) => {
          if (user.email !== "admin@gmail.com" && t.user_email !== user.email) return false;
@@ -125,14 +124,14 @@ function App() {
        .map((t) => (
 <Card key={t.id} style={{ margin: "10px" }}>
 <CardContent>
-<Typography>{t.title}</Typography>
+<Typography variant="h6">{t.title}</Typography>
 <Typography>{t.description}</Typography>
 <Typography style={{ color: t.status === "Open" ? "red" : "green" }}>
                {t.status}
 </Typography>
-<Typography>{t.user_email}</Typography>
+<Typography>User: {t.user_email}</Typography>
 <Typography>
-               {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
+               Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
 </Typography>
              {user.email === "admin@gmail.com" && (
 <Button onClick={() => updateStatus(t.id)}>Update</Button>
