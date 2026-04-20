@@ -51,20 +51,30 @@ app.delete("/tickets/:id", async (req, res) => {
  await supabase.from("tickets").delete().eq("id", req.params.id);
  res.json({ message: "deleted" });
 });
-// COMMENT
+// COMMENT (FINAL FIXED)
 app.post("/tickets/:id/comment", async (req, res) => {
  const { id } = req.params;
  const { comment } = req.body;
- const { data } = await supabase
+ const { data, error } = await supabase
    .from("tickets")
    .select("comments")
    .eq("id", id)
    .single();
- const old = data?.comments || [];
- await supabase
+ if (error) {
+   console.log(error);
+   return res.status(500).json(error);
+ }
+ const oldComments = Array.isArray(data.comments) ? data.comments : [];
+ const { error: updateError } = await supabase
    .from("tickets")
-   .update({ comments: [...old, comment] })
+   .update({
+     comments: [...oldComments, comment]
+   })
    .eq("id", id);
+ if (updateError) {
+   console.log(updateError);
+   return res.status(500).json(updateError);
+ }
  res.json({ message: "comment added" });
 });
 app.listen(5000, () => console.log("Server running 🚀"));
