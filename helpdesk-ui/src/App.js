@@ -13,59 +13,57 @@ function App() {
  const [user, setUser] = useState(null);
  const [email, setEmail] = useState("");
  const [password, setPassword] = useState("");
- // ✅ GET
  const getTickets = async () => {
-   try {
-     const res = await fetch(`${API}/tickets`);
-     const data = await res.json();
-     setTickets(Array.isArray(data) ? data : []);
-   } catch (err) {
-     console.log(err);
-     setTickets([]);
-   }
+   const res = await fetch(`${API}/tickets`);
+   const data = await res.json();
+   setTickets(Array.isArray(data) ? data : []);
  };
- // ✅ CREATE (FIXED)
  const createTicket = async () => {
-   alert("Button Clicked ✅");
-   console.log("SENDING:", {
-     title,
-     description: desc,
-     email: user?.email
+   await fetch(`${API}/tickets`, {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json"
+     },
+     body: JSON.stringify({
+       title,
+       description: desc,
+       email: user?.email
+     })
    });
-   try {
-     const res = await fetch(`${API}/tickets`, {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json"
-       },
-       body: JSON.stringify({
-         title,
-         description: desc,
-         email: user?.email
-       })
-     });
-     const data = await res.json();
-     console.log("RESPONSE:", data);
-     getTickets();
-     setTitle("");
-     setDesc("");
-   } catch (err) {
-     console.log("ERROR:", err);
-   }
+   setTitle("");
+   setDesc("");
+   getTickets();
  };
- // ✅ LOGIN
+ const updateStatus = async (id) => {
+   await fetch(`${API}/tickets/${id}`, {
+     method: "PUT"
+   });
+   getTickets();
+ };
+ const deleteTicket = async (id) => {
+   await fetch(`${API}/tickets/${id}`, {
+     method: "DELETE"
+   });
+   getTickets();
+ };
+ const addComment = async (id) => {
+   const comment = prompt("Enter comment");
+   if (!comment) return;
+   await fetch(`${API}/tickets/${id}/comment`, {
+     method: "POST",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ comment })
+   });
+   getTickets();
+ };
  const login = async () => {
    const { data, error } = await supabase.auth.signInWithPassword({
      email,
      password
    });
-   if (error) {
-     alert("Login failed ❌");
-   } else {
-     setUser(data.user);
-   }
+   if (error) alert("Login failed ❌");
+   else setUser(data.user);
  };
- // ✅ SIGNUP
  const signup = async () => {
    const { error } = await supabase.auth.signUp({
      email,
@@ -73,7 +71,6 @@ function App() {
    });
    if (!error) alert("Signup success ✅");
  };
- // ✅ LOGOUT
  const logout = async () => {
    await supabase.auth.signOut();
    setUser(null);
@@ -84,11 +81,7 @@ function App() {
  return !user ? (
 <div style={{ textAlign: "center", marginTop: "100px" }}>
 <Typography variant="h4">Login / Signup</Typography>
-<TextField
-       label="Email"
-       value={email}
-       onChange={(e) => setEmail(e.target.value)}
-     />
+<TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
 <TextField
        label="Password"
        type="password"
@@ -97,10 +90,8 @@ function App() {
        style={{ marginTop: "10px" }}
      />
 <br /><br />
-<Button variant="contained" onClick={login}>
-       Login
-</Button>
-<Button variant="outlined" onClick={signup} style={{ marginLeft: "10px" }}>
+<Button onClick={login}>Login</Button>
+<Button onClick={signup} style={{ marginLeft: "10px" }}>
        Signup
 </Button>
 </div>
@@ -110,19 +101,9 @@ function App() {
 <Typography>Logged in as: {user.email}</Typography>
 <Button onClick={logout}>Logout</Button>
 <br /><br />
-<TextField
-       label="Title"
-       value={title}
-       onChange={(e) => setTitle(e.target.value)}
-     />
-<TextField
-       label="Description"
-       value={desc}
-       onChange={(e) => setDesc(e.target.value)}
-     />
-<Button variant="contained" onClick={createTicket}>
-       Create
-</Button>
+<TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+<TextField label="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+<Button onClick={createTicket}>Create</Button>
      {tickets
        .filter((t) => {
          if (user.email === "admin@gmail.com") return true;
@@ -131,9 +112,18 @@ function App() {
        .map((t) => (
 <Card key={t.id} style={{ margin: "10px" }}>
 <CardContent>
-<Typography>{t.title} - {t.status}</Typography>
+<Typography variant="h6">{t.title}</Typography>
 <Typography>{t.description}</Typography>
+<Typography>Status: {t.status}</Typography>
 <Typography>User: {t.user_email}</Typography>
+<Typography>
+               Comments: {Array.isArray(t.comments) ? t.comments.join(", ") : "No comments"}
+</Typography>
+             {user.email === "admin@gmail.com" && (
+<Button onClick={() => updateStatus(t.id)}>Update</Button>
+             )}
+<Button onClick={() => deleteTicket(t.id)}>Delete</Button>
+<Button onClick={() => addComment(t.id)}>Comment</Button>
 </CardContent>
 </Card>
        ))}
