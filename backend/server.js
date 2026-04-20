@@ -8,9 +8,12 @@ const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
 );
-// GET ALL
+// GET
 app.get("/tickets", async (req, res) => {
- const { data, error } = await supabase.from("tickets").select("*").order("id", { ascending: false });
+ const { data, error } = await supabase
+   .from("tickets")
+   .select("*")
+   .order("id", { ascending: false });
  if (error) return res.status(500).json(error);
  res.json(data || []);
 });
