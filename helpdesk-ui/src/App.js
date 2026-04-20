@@ -10,7 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 const API = "https://helpdesk-backend-doga.onrender.com";
 const supabase = createClient(
  "https://jrdfzgulmeimpcjsslii.supabase.co",
- "YOUR_ANON_KEY"
+ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyZGZ6Z3VsbWVpbXBjanNzbGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDU3ODAsImV4cCI6MjA5MjE4MTc4MH0.YhzXGIu0-Rkdb5VBS9Wb8ORE4IbZaiMjKjDw8Wc0b6Q"
 );
 function App() {
  const [tickets, setTickets] = useState([]);
