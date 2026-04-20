@@ -11,10 +11,13 @@ const supabase = createClient(
 // GET
 app.get("/tickets", async (req, res) => {
  const { data, error } = await supabase.from("tickets").select("*");
- if (error) return res.status(500).json(error);
+ if (error) {
+   console.log(error);
+   return res.status(500).json(error);
+ }
  res.json(data || []);
 });
-// CREATE
+// CREATE (🔥 FIXED)
 app.post("/tickets", async (req, res) => {
  const { title, description, email } = req.body;
  const { data, error } = await supabase
@@ -24,18 +27,21 @@ app.post("/tickets", async (req, res) => {
        title,
        description,
        status: "Open",
-       comments: [],
        user_email: email || "demo@gmail.com",
-       created_at: new Date()
+       comments: []
      }
    ])
    .select();
- if (error) return res.status(500).json(error);
+ if (error) {
+   console.log("ERROR:", error);
+   return res.status(500).json(error);
+ }
  res.json(data);
 });
 // UPDATE
 app.put("/tickets/:id", async (req, res) => {
- await supabase.from("tickets")
+ await supabase
+   .from("tickets")
    .update({ status: "Completed" })
    .eq("id", req.params.id);
  res.json({ message: "updated" });
