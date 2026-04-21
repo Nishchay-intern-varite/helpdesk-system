@@ -8,7 +8,7 @@ import {
 } from "chart.js";
 import { Pie } from "react-chartjs-2";
 ChartJS.register(ArcElement, Tooltip, Legend);
-const API = "http://localhost:5000";
+const API = "https://your-backend.onrender.com";
 const ADMIN_EMAIL = "admin@gmail.com";
 const ADMIN_PASS = "1234";
 function App() {
